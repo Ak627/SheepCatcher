@@ -14,6 +14,7 @@ score = 0
 
 #images and fonts
 SheepPic = pygame.image.load("sheep.jpg")
+PerryPic = pygame.image.load("PerryPic.png")
 font = pygame.font.Font('freesansbold.ttf', 32)
 text = font.render('Score:', True, (200, 200, 0))
 text2 = font.render(str(score), True, (200, 200, 0))
@@ -24,49 +25,85 @@ LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
-
+class Sheep:
+    def __init__(self, xpos, ypos, dir, isCaught):
+        self.xpos = xpos
+        self.ypos = ypos
+        self.dir = dir
+        self.isCaught = isCaught
 #function defintions------------------------------------
 #can you tell me what the parameters are for these functions, and what they return (if anything)?
-def sheepMove(position):
+    def sheepMove(self):
+        if timer % 50 == 0: #only change direction every 50 game loops
+            self.dir = random.randrange(0, 4) #set random direction
+       #X movement
+        if self.dir == LEFT and self.xpos >= 0:
+            self.xpos-=5 #move left
+
+        elif self.dir == RIGHT and self.xpos+70 <= 800:
+            self.xpos += 5 #move right
+        #Y movement
+        elif self.dir == UP and self.ypos >= 0: 
+            self.ypos -=5 #move up
+
+        elif self.dir == DOWN and self.ypos+70 <= 800:
+            self.ypos +=5 #move down
+
+        return self.xpos and self.ypos
+
+    def collision(self, PlayerX, PlayerY):
+        if PlayerX+40 > self.xpos:
+           if PlayerX < self.xpos+40:
+               if PlayerY+40 >self.ypos:
+                   if PlayerY < self.ypos+40:
+                       if self.isCaught == False: #only catch uncaught sheeps!
+                        self.isCaught = True #catch da sheepies!
+                        global score #make it so this function can change this value
+                        score +=1
+
+def perryMove(position):
     if timer % 50 == 0: #only change direction every 50 game loops
         position[2] = random.randrange(0, 4) #set random direction
    #X movement
     if position[2] == LEFT and position[0] >= 0:
         position[0]-=5 #move left
 
-    elif position[2] == RIGHT and position[0]+70 <= 800:
+    elif position[2] == RIGHT and position[0]+40 <= 800:
         position[0] += 5 #move right
     #Y movement
     elif position[2] == UP and position[1] >= 0: 
         position[1] -=5 #move up
 
-    elif position[2] == DOWN and position[1]+70 <= 800:
+    elif position[2] == DOWN and position[1]+52 <= 800:
         position[1] +=5 #move down
 
     return position
 
-def collision(PlayerX, PlayerY, sheepInfo):
-    if PlayerX+40 > sheepInfo[0]:
-       if PlayerX < sheepInfo[0]+40:
-           if PlayerY+40 >sheepInfo[1]:
-               if PlayerY < sheepInfo[1]+40:
-                   if sheepInfo[3] == False: #only catch uncaught sheeps!
-                    sheepInfo[3] = True #catch da sheepies!
+def pcollision(PlayerX, PlayerY, perryInfo):
+    if PlayerX+40 > perryInfo[0]:
+       if PlayerX < perryInfo[0]+37:
+           if PlayerY+40 >perryInfo[1]:
+               if PlayerY < perryInfo[1]+50:
+                   if perryInfo[3] == False: #only catch uncaught sheeps!
+                    perryInfo[3] = True #catch da sheepies!
                     global score #make it so this function can change this value
                     score +=1
 
-
-
 #create sheep!
 #numbers in list represent xpos, ypos, direction moving, and whether it's been caught or not!
-sheep1 = [200, 400, RIGHT, False]
-sheep2 = [400, 300, LEFT, False]
-sheep3 = [300, 600, UP, False]
-sheep4 = [200, 100, DOWN, False]
-sheep5 = [50, 600, LEFT, False]
-#make more sheeps here!
+
+sheps = []
 
 
+sheep1 = Sheep(200, 400, RIGHT, False)
+sheep2 = Sheep(400, 300, LEFT, False)
+sheep3 = Sheep(300, 600, UP, False)
+sheep4 = Sheep(200, 100, DOWN, False)
+sheep5 = Sheep(50, 600, LEFT, False)
+
+#create Perry!
+p1 = [371, 689, UP, False]
+p2 = [39, 574, DOWN, False]
 
 #player variables
 xpos = 500 #xpos of player
@@ -75,7 +112,7 @@ vx = 0 #x velocity (left/right speed) of player
 vy = 0 #y velocity (up/down speed) of player
 keys = [False, False, False, False] #this list holds whether each key has been pressed
 
-while score<5: #GAME LOOP############################################################
+while score < 7: #GAME LOOP############################################################
     clock.tick(60) #FPS
     timer+=1
     
@@ -126,21 +163,27 @@ while score<5: #GAME LOOP#######################################################
         vy = 0
 
     #player/sheep collision!
-    collision(xpos, ypos, sheep1)
-    collision(xpos, ypos, sheep2)
-    collision(xpos, ypos, sheep3)
-    collision(xpos, ypos, sheep4)
-    collision(xpos, ypos, sheep5)
+    sheep1.collision(xpos, ypos)
+    sheep2.collision(xpos, ypos)
+    sheep3.collision(xpos, ypos)
+    sheep4.collision(xpos, ypos)
+    sheep5.collision(xpos, ypos)
+
+    pcollision(xpos, ypos, p1)
+    pcollision(xpos, ypos, p2)
     #update player position
     xpos+=vx 
     ypos+=vy
     
     #update sheep position
-    sheep1 = sheepMove(sheep1)
-    sheep2 = sheepMove(sheep2)
-    sheep3 = sheepMove(sheep3)
-    sheep4 = sheepMove(sheep4)
-    sheep5 = sheepMove(sheep5)
+    sheep1 = sheep1.sheepMove()
+    sheep2 = sheep2.sheepMove()
+    sheep3 = sheep3.sheepMove()
+    sheep4 = sheep4.sheepMove()
+    sheep5 = sheep5.sheepMove()
+
+    p1 = perryMove(p1)
+    p2 = perryMove(p2)
     # RENDER
     # Section--------------------------------------------------------------------------------
             
@@ -166,6 +209,13 @@ while score<5: #GAME LOOP#######################################################
         #pygame.draw.rect(screen, (250, 100, 100), (sheep1[0], sheep1[1], 40, 40)) #use this if you don't have a jpg
         screen.blit(SheepPic, (sheep5[0], sheep5[1]))
 
+
+    if p1[3] == False: #don't draw them if they're already caught!
+        #pygame.draw.rect(screen, (250, 100, 100), (sheep1[0], sheep1[1], 40, 40)) #use this if you don't have a jpg
+        screen.blit(PerryPic, (p1[0], p1[1]))
+    if p2[3] == False: #don't draw them if they're already caught!
+        #pygame.draw.rect(screen, (250, 100, 100), (sheep1[0], sheep1[1], 40, 40)) #use this if you don't have a jpg
+        screen.blit(PerryPic, (p2[0], p2[1]))
     #display score
     screen.blit(text, (20, 20))
     text2 = font.render(str(score), True, (200, 200, 0))#update score number
